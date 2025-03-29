@@ -7,16 +7,18 @@ import (
 	"github.com/Yandex-Practicum/go1fl-sprint6-final/pkg/morse"
 )
 
+// MorseService service level interface
 type MorseService interface {
-	AutoConvert(input string) (string, error) // Переименовали для ясности
-	Encode(text string) (string, error)       // Явное кодирование
-	Decode(morse string) (string, error)      // Явное декодирование
+	AutoConvert(input string) (string, error) 
+	Encode(text string) (string, error)       
+	Decode(morse string) (string, error)      
 }
 
 type morseServiceImpl struct {
 	converter *morse.Converter
 }
 
+// NewMorseService creates new service level 
 func NewMorseService() MorseService {
 	return &morseServiceImpl{
 		converter: &morse.DefaultConverter,

@@ -20,7 +20,7 @@ func main() {
 
 	// For development (when using go run)
 	if filepath.Base(exePath) == "main" {
-		baseDir = filepath.Join(baseDir, "../../") // Adjust based on your structure
+		baseDir = filepath.Join(baseDir, "../../") //
 	}
 
 	// Create service

@@ -2,24 +2,29 @@ package handlers
 
 import (
 	"io"
+	"log"
 	"net/http"
 	"os"
 	"path/filepath"
 )
 
+// MorseService interface to use from Service package
 type MorseService interface {
 	AutoConvert(input string) (string, error)
 }
 
+// MorseHandlers struct to use it in Handlers
 type MorseHandlers struct {
 	service MorseService
 	baseDir string
 }
 
+// NewMorseHandlers create new handlers structure
 func NewMorseHandlers(ms MorseService) *MorseHandlers {
 	return &MorseHandlers{service: ms}
 }
 
+// RegisterAll registring all handlers
 func RegisterAll(mux *http.ServeMux, ms MorseService) {
 	h := NewMorseHandlers(ms)
 
@@ -78,4 +83,10 @@ func (h *MorseHandlers) handleUpload(w http.ResponseWriter, r *http.Request) {
 
 	w.Header().Set("Content-Type", "text/plain; charset=utf-8")
 	w.Write([]byte(result))
+
+	// Write to file
+	err = os.WriteFile("output.txt", []byte(result), 0o644)
+	if err != nil {
+		log.Printf("Failed to write file: %v", err)
+	}
 }
