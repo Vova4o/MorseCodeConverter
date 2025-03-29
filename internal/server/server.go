@@ -3,36 +3,55 @@ package server
 import (
 	"log"
 	"net/http"
+	"time"
 )
 
-// Server structure for the HTTP server
-type Server struct {
-	Logger  *log.Logger
-	server  *http.Server
-	Mux     *http.ServeMux // Expose Mux so handlers can be registered externally
+// HandlerRegistrar interface for registering handlers
+type HandlerRegistrar interface {
+	RegisterHandlers(srv *Server)
 }
 
-// New creates a new Server instance
+// Server структура HTTP-сервера
+type Server struct {
+	logger *log.Logger
+	httpServer *http.Server
+}
+
+// New создает новый экземпляр сервера
 func New(logger *log.Logger) *Server {
+	// Создаем роутер
 	mux := http.NewServeMux()
+	
+	// Настраиваем HTTP-сервер
+	httpServer := &http.Server{
+		Addr:         ":8080",              
+		Handler:      mux,                  
+		ErrorLog:     logger,               
+		ReadTimeout:  5 * time.Second,      
+		WriteTimeout: 10 * time.Second,     
+		IdleTimeout:  15 * time.Second,     
+	}
+
 	return &Server{
-		Logger: logger,
-		Mux:    mux,
-		server: &http.Server{
-			Handler: mux,
-		},
+		logger:     logger,
+		httpServer: httpServer,
 	}
 }
 
-// Start starts the HTTP server on the specified address
-func (s *Server) Start(addr string) error {
-	s.server.Addr = addr
-	s.Logger.Printf("Starting server on %s", addr)
-	return s.server.ListenAndServe()
+// RegisterHandler регистрирует обработчик для пути
+func (s *Server) RegisterHandler(path string, handler http.HandlerFunc) {
+	mux := s.httpServer.Handler.(*http.ServeMux)
+	mux.HandleFunc(path, handler)
 }
 
-// Stop gracefully shuts down the server
+// Start запускает сервер
+func (s *Server) Start() error {
+	s.logger.Printf("Starting server on %s", s.httpServer.Addr)
+	return s.httpServer.ListenAndServe()
+}
+
+// Stop останавливает сервер
 func (s *Server) Stop() error {
-	s.Logger.Println("Shutting down server")
-	return s.server.Close()
+	s.logger.Println("Shutting down server")
+	return s.httpServer.Close()
 }

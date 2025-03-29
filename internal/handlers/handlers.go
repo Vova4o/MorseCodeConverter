@@ -6,6 +6,7 @@ import (
 	"net/http"
 	"os"
 	"path/filepath"
+	"time"
 )
 
 // MorseService interface to use from Service package
@@ -20,16 +21,20 @@ type MorseHandlers struct {
 }
 
 // NewMorseHandlers create new handlers structure
-func NewMorseHandlers(ms MorseService) *MorseHandlers {
-	return &MorseHandlers{service: ms}
+func NewMorseHandlers(ms MorseService, path string) *MorseHandlers {
+	return &MorseHandlers{
+		service: ms,
+		baseDir: path,
+	}
 }
 
-// RegisterAll registring all handlers
-func RegisterAll(mux *http.ServeMux, ms MorseService) {
-	h := NewMorseHandlers(ms)
-
-	mux.HandleFunc("/", h.serveStaticPage)
-	mux.HandleFunc("/upload", h.handleUpload)
+// RegisterHandlers method to register all handlers
+func (h *MorseHandlers) RegisterHandlers(srv interface {
+	RegisterHandler(string, http.HandlerFunc)
+},
+) {
+	srv.RegisterHandler("/", h.serveStaticPage)
+	srv.RegisterHandler("/upload", h.handleUpload)
 }
 
 func (h *MorseHandlers) serveStaticPage(w http.ResponseWriter, r *http.Request) {
@@ -84,8 +89,10 @@ func (h *MorseHandlers) handleUpload(w http.ResponseWriter, r *http.Request) {
 	w.Header().Set("Content-Type", "text/plain; charset=utf-8")
 	w.Write([]byte(result))
 
+	filename := time.Now().UTC().String()
+
 	// Write to file
-	err = os.WriteFile("output.txt", []byte(result), 0o644)
+	err = os.WriteFile(filename+".txt", []byte(result), 0o644)
 	if err != nil {
 		log.Printf("Failed to write file: %v", err)
 	}

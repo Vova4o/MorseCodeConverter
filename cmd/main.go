@@ -2,35 +2,37 @@ package main
 
 import (
 	"log"
-	"net/http"
 	"os"
 	"path/filepath"
 
 	"github.com/Yandex-Practicum/go1fl-sprint6-final/internal/handlers"
+	"github.com/Yandex-Practicum/go1fl-sprint6-final/internal/server"
 	"github.com/Yandex-Practicum/go1fl-sprint6-final/internal/service"
 )
 
 func main() {
+	logger := log.New(os.Stdout, "SERVER:", log.LstdFlags)
 	// Get the directory where main.go is located
 	exePath, err := os.Executable()
 	if err != nil {
-		log.Fatal("Could not determine executable path:", err)
+		logger.Fatal("Could not determine executable path:", err)
 	}
 	baseDir := filepath.Dir(exePath)
-
-	// For development (when using go run)
 	if filepath.Base(exePath) == "main" {
-		baseDir = filepath.Join(baseDir, "../../") //
+		baseDir = filepath.Join(baseDir, "../../")
 	}
 
 	// Create service
 	morseService := service.NewMorseService()
 
-	// Create server
-	mux := http.NewServeMux()
-	handlers.RegisterAll(mux, morseService)
+	// Creating handlers
+	handler := handlers.NewMorseHandlers(morseService, baseDir)
 
-	log.Println("Starting server on :8080")
-	log.Println("Serving from directory:", baseDir)
-	log.Fatal(http.ListenAndServe(":8080", mux))
+	// Create server
+	mux := server.New(logger)
+	handler.RegisterHandlers(mux)
+
+	if err := mux.Start(); err != nil {
+		logger.Fatal(err)
+	}
 }

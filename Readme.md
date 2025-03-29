@@ -46,7 +46,7 @@
 1. Клонируйте репозиторий:
 
    ```sh
-   git clone https://github.com/Vova4o/sprin6
+   git clone https://github.com/Vova4o/MorseCodeConverter
    cd sprint6
    ```
 
